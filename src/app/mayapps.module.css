@@ -178,7 +178,14 @@
   border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
-/* CodeMirror fills the wrapper and scrolls internally. */
+/* CodeMirror fills the wrapper and scrolls internally. react-codemirror nests
+   a .cm-theme div between .editor and .cm-editor, so it must also be 100% tall —
+   otherwise .cm-editor's height:100% resolves against an auto-height box, grows
+   with the content, and the page scrolls instead of the editor. */
+.editor :global(.cm-theme) {
+  height: 100%;
+}
+
 .editor :global(.cm-editor) {
   height: 100%;
 }
@@ -223,7 +230,9 @@
   gap: 6px;
 }
 
-/* On small screens the modal fills the whole viewport, no margins. */
+/* On small screens the modal fills the whole viewport. Inputs keep a small
+   lateral margin (the panel's reduced padding); the code editor and run stage
+   break out to the full width for maximum real estate. */
 @media (max-width: 640px) {
   .overlay {
     padding: 0;
@@ -233,6 +242,16 @@
     max-width: none;
     min-height: 100dvh;
     border: none;
+    border-radius: 0;
+    padding: 16px 12px;
+  }
+
+  .editor,
+  .stage {
+    margin-left: -12px;
+    margin-right: -12px;
+    border-left: none;
+    border-right: none;
     border-radius: 0;
   }
 }
