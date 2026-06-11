@@ -203,6 +203,20 @@
   gap: 6px;
 }
 
+/* On small screens the modal fills the whole viewport, no margins. */
+@media (max-width: 640px) {
+  .overlay {
+    padding: 0;
+  }
+
+  .panel {
+    max-width: none;
+    min-height: 100dvh;
+    border: none;
+    border-radius: 0;
+  }
+}
+
 .panelHeader {
   display: flex;
   align-items: center;

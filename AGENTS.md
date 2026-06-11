@@ -1,3 +1,5 @@
+Check README.md for info about this netxjs app.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
