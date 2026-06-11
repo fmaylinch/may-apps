@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { loadConfig, clearConfig } from "@/lib/firebase";
-import { listApps, createApp } from "@/lib/appsRepo";
+import { listApps, createApp, slugify } from "@/lib/appsRepo";
 import { EXAMPLE_APPS } from "@/lib/examples";
 import type { MiniApp } from "@/lib/types";
 import CredentialGate from "@/components/CredentialGate";
@@ -43,7 +43,7 @@ export default function Home() {
   }, [refresh]);
 
   async function addExamples() {
-    for (const draft of EXAMPLE_APPS) await createApp(draft);
+    for (const draft of EXAMPLE_APPS) await createApp(slugify(draft.name), draft);
     refresh();
   }
 

@@ -156,6 +156,13 @@
   width: 100%;
 }
 
+.input:disabled,
+.select:disabled {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  cursor: not-allowed;
+}
+
 /* Wrapper that gives the CodeMirror editor our bordered, resizable box. */
 .editor {
   border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);

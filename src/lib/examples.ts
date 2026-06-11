@@ -117,9 +117,9 @@ export interface Template {
  */
 export const TEMPLATES: Template[] = [
   {
-    label: "Simple ToDo (React)",
+    label: "Simple React ToDo",
     draft: {
-      name: "Simple ToDo",
+      name: "Simple React ToDo",
       description: "A minimal React todo list backed by the scoped db.",
       type: "react",
       code: `// Globals: React, useState, useEffect, db, ctx, render
@@ -173,9 +173,9 @@ render(<App />);
     },
   },
   {
-    label: "Simple ToDo (vanilla)",
+    label: "Simple Vanilla ToDo",
     draft: {
-      name: "Simple ToDo",
+      name: "Simple Vanilla ToDo",
       description: "A minimal vanilla-JS todo list backed by the scoped db.",
       type: "vanilla",
       code: `// Globals: root (HTMLElement), db (scoped), ctx

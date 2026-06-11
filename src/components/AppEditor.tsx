@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
-import { createApp, updateApp, deleteApp } from "@/lib/appsRepo";
+import { createApp, updateApp, deleteApp, slugify } from "@/lib/appsRepo";
 import { clearAppData } from "@/lib/appData";
 import { TEMPLATES, type Template } from "@/lib/examples";
 import type { AppType, MiniApp } from "@/lib/types";
@@ -31,6 +31,8 @@ export default function AppEditor({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(app?.name ?? "");
+  const [slug, setSlug] = useState(app?.id ?? "");
+  const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState(app?.description ?? "");
   const [type, setType] = useState<AppType>(app?.type ?? "react");
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
@@ -46,8 +48,20 @@ export default function AppEditor({
     }
   }
 
+  // While creating, keep the slug mirrored from the name until the user edits it by hand.
+  function changeName(next: string) {
+    setName(next);
+    if (!app && !slugEdited) setSlug(slugify(next));
+  }
+
+  function changeSlug(next: string) {
+    setSlugEdited(true);
+    setSlug(next.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+  }
+
   function applyTemplate(t: Template) {
     setName(t.draft.name);
+    if (!slugEdited) setSlug(slugify(t.draft.name));
     setDescription(t.draft.description);
     setType(t.draft.type);
     setCode(t.draft.code);
@@ -58,12 +72,16 @@ export default function AppEditor({
       setError("Give the app a name.");
       return;
     }
+    if (!app && !slug) {
+      setError("Give the app a valid id (slug).");
+      return;
+    }
     setAction("save");
     setError(null);
     try {
       const draft = { name: name.trim(), description: description.trim(), type, code };
       if (app) await updateApp(app.id, draft);
-      else await createApp(draft);
+      else await createApp(slug, draft);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -130,9 +148,23 @@ export default function AppEditor({
           <input
             className={styles.input}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => changeName(e.target.value)}
             placeholder="My mini-app"
           />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>ID</label>
+          {app ? (
+            <input className={styles.input} value={app.id} disabled />
+          ) : (
+            <input
+              className={styles.input}
+              value={slug}
+              onChange={(e) => changeSlug(e.target.value)}
+              placeholder="my-mini-app"
+            />
+          )}
         </div>
 
         <div className={styles.field}>
