@@ -3,6 +3,7 @@
 import { useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
 import { createApp, updateApp, deleteApp } from "@/lib/appsRepo";
+import { clearAppData } from "@/lib/appData";
 import { TEMPLATES, type Template } from "@/lib/examples";
 import type { AppType, MiniApp } from "@/lib/types";
 import styles from "@/app/mayapps.module.css";
@@ -33,8 +34,9 @@ export default function AppEditor({
   const [description, setDescription] = useState(app?.description ?? "");
   const [type, setType] = useState<AppType>(app?.type ?? "react");
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
-  const [busy, setBusy] = useState(false);
+  const [action, setAction] = useState<"save" | "delete" | "clear" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const busy = action !== null;
 
   function changeType(next: AppType) {
     setType(next);
@@ -56,7 +58,7 @@ export default function AppEditor({
       setError("Give the app a name.");
       return;
     }
-    setBusy(true);
+    setAction("save");
     setError(null);
     try {
       const draft = { name: name.trim(), description: description.trim(), type, code };
@@ -65,19 +67,33 @@ export default function AppEditor({
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
+      setAction(null);
     }
   }
 
   async function remove() {
     if (!app || !confirm(`Delete "${app.name}"? This cannot be undone.`)) return;
-    setBusy(true);
+    setAction("delete");
     try {
       await deleteApp(app.id);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
+      setAction(null);
+    }
+  }
+
+  async function removeData() {
+    if (!app || !confirm(`Delete all data stored by "${app.name}"? This cannot be undone.`)) return;
+    setAction("clear");
+    setError(null);
+    try {
+      const count = await clearAppData(app.id);
+      alert(`Deleted ${count} item${count === 1 ? "" : "s"}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAction(null);
     }
   }
 
@@ -150,13 +166,22 @@ export default function AppEditor({
 
         <div className={styles.row}>
           <button className={`${styles.btn} ${styles.primary}`} onClick={save} disabled={busy}>
-            {busy ? "Saving…" : "Save"}
+            {action === "save" ? "Saving…" : "Save"}
           </button>
           <div className={styles.spacer} />
           {app && (
-            <button className={`${styles.btn} ${styles.danger}`} onClick={remove} disabled={busy}>
-              Delete
-            </button>
+            <>
+              <button
+                className={`${styles.btn} ${styles.danger}`}
+                onClick={removeData}
+                disabled={busy}
+              >
+                {action === "clear" ? "Deleting data…" : "Delete data"}
+              </button>
+              <button className={`${styles.btn} ${styles.danger}`} onClick={remove} disabled={busy}>
+                {action === "delete" ? "Deleting…" : "Delete"}
+              </button>
+            </>
           )}
         </div>
       </div>

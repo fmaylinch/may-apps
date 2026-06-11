@@ -37,6 +37,14 @@ export interface ScopedDb {
   remove(id: string): Promise<void>;
 }
 
+/** Deletes every item in an app's data subcollection. Returns how many were removed. */
+export async function clearAppData(appId: string): Promise<number> {
+  const items = collection(getDb(), "appData", appId, "items");
+  const snap = await getDocs(items);
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+  return snap.size;
+}
+
 export function createScopedDb(appId: string): ScopedDb {
   const items = () => collection(getDb(), "appData", appId, "items");
 
