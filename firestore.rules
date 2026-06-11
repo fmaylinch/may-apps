@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Starter rules for MayApps.
+//
+// ⚠️ These rules allow ANYONE with your Firebase config to read/write your data.
+// They are fine for a private, personal project on a throwaway DB, but you should
+// tighten them (e.g. add Firebase Auth and check `request.auth != null`) before
+// putting anything sensitive in here.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The app registry: your mini-app scripts.
+    match /apps/{appId} {
+      allow read, write: if true;
+    }
+
+    // Per-app data, scoped under appData/{appId}/items/*.
+    match /appData/{appId}/items/{itemId} {
+      allow read, write: if true;
+    }
+  }
+}

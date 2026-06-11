@@ -1,0 +1,225 @@
+.shell {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.muted {
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  font-size: 13px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Buttons */
+.btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.primary {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
+.primary:hover {
+  opacity: 0.88;
+  background: var(--foreground);
+}
+
+.danger {
+  border-color: color-mix(in srgb, #e5484d 60%, transparent);
+  color: #e5484d;
+}
+
+.danger:hover {
+  background: color-mix(in srgb, #e5484d 12%, transparent);
+}
+
+/* App list */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardDesc {
+  font-size: 13px;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 12px;
+}
+
+/* Forms */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.input,
+.select,
+.textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  background: var(--background);
+  color: var(--foreground);
+  width: 100%;
+}
+
+.textarea {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 320px;
+  resize: vertical;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.error {
+  color: #e5484d;
+  font-size: 13px;
+  background: color-mix(in srgb, #e5484d 10%, transparent);
+  border: 1px solid color-mix(in srgb, #e5484d 30%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* Modal / overlay for editor + runner */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, #000 45%, transparent);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  overflow: auto;
+  z-index: 50;
+}
+
+.panel {
+  width: 100%;
+  max-width: 760px;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.panelHeader h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Run surface where the mini-app mounts */
+.stage {
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 120px;
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
