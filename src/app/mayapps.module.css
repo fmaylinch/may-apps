@@ -145,8 +145,7 @@
 }
 
 .input,
-.select,
-.textarea {
+.select {
   font: inherit;
   font-size: 14px;
   padding: 9px 11px;
@@ -157,14 +156,28 @@
   width: 100%;
 }
 
-.textarea {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  min-height: 320px;
+/* Wrapper that gives the CodeMirror editor our bordered, resizable box. */
+.editor {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 8px;
+  background: var(--background);
+  overflow: hidden;
   resize: vertical;
-  white-space: pre;
-  tab-size: 2;
+  min-height: 320px;
+  height: 320px;
+}
+
+.editor:focus-within {
+  border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+/* CodeMirror fills the wrapper and scrolls internally. */
+.editor :global(.cm-editor) {
+  height: 100%;
+}
+
+.editor :global(.cm-scroller) {
+  overflow: auto;
 }
 
 .error {

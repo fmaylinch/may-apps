@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CodeEditor from "@/components/CodeEditor";
 import { createApp, updateApp, deleteApp } from "@/lib/appsRepo";
 import { TEMPLATES, type Template } from "@/lib/examples";
 import type { AppType, MiniApp } from "@/lib/types";
@@ -142,12 +143,7 @@ export default function AppEditor({
 
         <div className={styles.field}>
           <label className={styles.label}>Code</label>
-          <textarea
-            className={styles.textarea}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            spellCheck={false}
-          />
+          <CodeEditor value={code} onChange={setCode} />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
