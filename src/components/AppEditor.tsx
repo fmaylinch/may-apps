@@ -7,6 +7,7 @@ import { clearAppData } from "@/lib/appData";
 import {
   loadExamples,
   fetchExampleCode,
+  exampleCodeUrl,
   parseExampleHeader,
   type ExampleMeta,
 } from "@/lib/examples";
@@ -41,20 +42,20 @@ export default function AppEditor({
   const [description, setDescription] = useState(app?.description ?? "");
   const [type, setType] = useState<AppType>(app?.type ?? "react");
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
-  const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceUrl, setSourceUrl] = useState(app?.sourceUrl ?? "");
   const [pulling, setPulling] = useState(false);
   const [action, setAction] = useState<"save" | "delete" | "clear" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [templates, setTemplates] = useState<ExampleMeta[]>([]);
+  const [examples, setExamples] = useState<ExampleMeta[]>([]);
+  const [showExamples, setShowExamples] = useState(false);
   const busy = action !== null;
 
-  // Templates are only offered while creating; load the manifest once.
+  // Load the example catalog once so it can be offered from the Examples button.
   useEffect(() => {
-    if (app) return;
     loadExamples()
-      .then((examples) => setTemplates(examples.filter((e) => e.template)))
-      .catch(() => {}); // non-fatal: the dialog still works without templates
-  }, [app]);
+      .then(setExamples)
+      .catch(() => {}); // non-fatal: the dialog still works without examples
+  }, []);
 
   function changeType(next: AppType) {
     setType(next);
@@ -75,11 +76,13 @@ export default function AppEditor({
     setSlug(next.toLowerCase().replace(/[^a-z0-9-]/g, ""));
   }
 
-  async function applyTemplate(meta: ExampleMeta) {
+  async function applyExample(meta: ExampleMeta) {
     setName(meta.name);
     if (!slugEdited) setSlug(slugify(meta.name));
     setDescription(meta.description);
     setType(meta.type);
+    // Keep the example's URL in the input so it can be re-pulled later.
+    setSourceUrl(exampleCodeUrl(meta));
     setError(null);
     try {
       setCode(await fetchExampleCode(meta));
@@ -147,7 +150,7 @@ export default function AppEditor({
     setAction("save");
     setError(null);
     try {
-      const draft = { name: name.trim(), description: description.trim(), type, code };
+      const draft = { name: name.trim(), description: description.trim(), type, code, sourceUrl: sourceUrl.trim() };
       if (app) await updateApp(app.id, draft);
       else await createApp(slug, draft);
       onSaved();
@@ -192,24 +195,6 @@ export default function AppEditor({
             Cancel
           </button>
         </div>
-
-        {!app && templates.length > 0 && (
-          <div className={styles.field}>
-            <label className={styles.label}>Start from a template</label>
-            <div className={styles.row}>
-              {templates.map((t) => (
-                <button
-                  key={t.slug}
-                  type="button"
-                  className={styles.btn}
-                  onClick={() => applyTemplate(t)}
-                >
-                  {t.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className={styles.field}>
           <label className={styles.label}>Name</label>
@@ -270,6 +255,15 @@ export default function AppEditor({
               }}
               placeholder="https://example.com/app.js"
             />
+            {examples.length > 0 && (
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() => setShowExamples((v) => !v)}
+              >
+                Examples
+              </button>
+            )}
             <button
               type="button"
               className={styles.btn}
@@ -279,6 +273,26 @@ export default function AppEditor({
               {pulling ? "Pulling…" : "Pull"}
             </button>
           </div>
+          {showExamples && examples.length > 0 && (
+            <select
+              className={styles.select}
+              value=""
+              onChange={(e) => {
+                const meta = examples.find((x) => x.slug === e.target.value);
+                if (meta) applyExample(meta);
+                setShowExamples(false);
+              }}
+            >
+              <option value="" disabled>
+                Choose an example…
+              </option>
+              {examples.map((x) => (
+                <option key={x.slug} value={x.slug}>
+                  {x.name}
+                </option>
+              ))}
+            </select>
+          )}
           <CodeEditor value={code} onChange={setCode} />
         </div>
 

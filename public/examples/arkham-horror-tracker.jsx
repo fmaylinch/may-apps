@@ -1,7 +1,6 @@
 // @name Arkham Horror Tracker
 // @description Tracks Arkham Horror progress and points.
 // @type react
-// @template
 
 // Globals: React, useState, useEffect, db, ctx, render
 

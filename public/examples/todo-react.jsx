@@ -1,7 +1,6 @@
-// @name Todos (React)
-// @description React + JSX. CRUDs todo items in the scoped db.
+// @name To-Do List
+// @description React + JSX. CRUDs to-do items in the scoped db.
 // @type react
-// @template
 
 // Globals: React, useState, useEffect, db, ctx, render
 // Mount your app by calling render(<App/>).
@@ -49,7 +48,7 @@ function App() {
         {todos.map((t) => (
           <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", padding: "4px 0" }}>
             <input type="checkbox" checked={t.done} onChange={() => toggle(t)} />
-            <span style={{ flex: 1, textDecoration: t.done ? "line-through" : "none" }}>{t.text}</span>
+            <span style={{ textDecoration: t.done ? "line-through" : "none" }}>{t.text}</span>
             <button onClick={() => remove(t)} style={{ cursor: "pointer" }}>✕</button>
           </li>
         ))}

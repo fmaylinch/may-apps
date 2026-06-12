@@ -32,7 +32,6 @@ export async function GET() {
       description: header.description ?? "",
       type: header.type ?? fallbackType,
       file,
-      template: header.template,
     });
   }
 
