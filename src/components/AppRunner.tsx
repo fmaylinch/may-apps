@@ -48,7 +48,7 @@ export default function AppRunner({ app, onClose }: { app: MiniApp; onClose: () 
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.panel} style={app.color ? { backgroundColor: app.color } : undefined} onClick={(e) => e.stopPropagation()}>
         <div className={styles.panelHeader}>
           <h2>{app.name}</h2>
           <button className={styles.btn} onClick={onClose}>
@@ -56,7 +56,7 @@ export default function AppRunner({ app, onClose }: { app: MiniApp; onClose: () 
           </button>
         </div>
         {error && <div className={styles.error}>{error}</div>}
-        <div className={styles.stage} ref={stageRef} />
+        <div className={styles.stage} style={app.color ? { background: "var(--background)" } : undefined} ref={stageRef} />
       </div>
     </div>
   );
