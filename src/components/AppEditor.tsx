@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
 import { createApp, updateApp, deleteApp, slugify } from "@/lib/appsRepo";
 import { clearAppData } from "@/lib/appData";
-import { TEMPLATES, type Template } from "@/lib/examples";
+import { loadExamples, fetchExampleCode, type ExampleMeta } from "@/lib/examples";
 import type { AppType, MiniApp } from "@/lib/types";
 import styles from "@/app/mayapps.module.css";
 
@@ -36,9 +36,20 @@ export default function AppEditor({
   const [description, setDescription] = useState(app?.description ?? "");
   const [type, setType] = useState<AppType>(app?.type ?? "react");
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [pulling, setPulling] = useState(false);
   const [action, setAction] = useState<"save" | "delete" | "clear" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<ExampleMeta[]>([]);
   const busy = action !== null;
+
+  // Templates are only offered while creating; load the manifest once.
+  useEffect(() => {
+    if (app) return;
+    loadExamples()
+      .then((examples) => setTemplates(examples.filter((e) => e.template)))
+      .catch(() => {}); // non-fatal: the dialog still works without templates
+  }, [app]);
 
   function changeType(next: AppType) {
     setType(next);
@@ -59,12 +70,37 @@ export default function AppEditor({
     setSlug(next.toLowerCase().replace(/[^a-z0-9-]/g, ""));
   }
 
-  function applyTemplate(t: Template) {
-    setName(t.draft.name);
-    if (!slugEdited) setSlug(slugify(t.draft.name));
-    setDescription(t.draft.description);
-    setType(t.draft.type);
-    setCode(t.draft.code);
+  async function applyTemplate(meta: ExampleMeta) {
+    setName(meta.name);
+    if (!slugEdited) setSlug(slugify(meta.name));
+    setDescription(meta.description);
+    setType(meta.type);
+    setError(null);
+    try {
+      setCode(await fetchExampleCode(meta));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function pullFromUrl() {
+    const url = sourceUrl.trim();
+    if (!url) {
+      setError("Enter a URL to pull code from.");
+      return;
+    }
+    setPulling(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/fetch-code?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `Failed to fetch (${res.status}).`);
+      setCode(data.code);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPulling(false);
+    }
   }
 
   async function save() {
@@ -125,18 +161,18 @@ export default function AppEditor({
           </button>
         </div>
 
-        {!app && (
+        {!app && templates.length > 0 && (
           <div className={styles.field}>
             <label className={styles.label}>Start from a template</label>
             <div className={styles.row}>
-              {TEMPLATES.map((t) => (
+              {templates.map((t) => (
                 <button
-                  key={t.label}
+                  key={t.slug}
                   type="button"
                   className={styles.btn}
                   onClick={() => applyTemplate(t)}
                 >
-                  {t.label}
+                  {t.name}
                 </button>
               ))}
             </div>
@@ -191,6 +227,26 @@ export default function AppEditor({
 
         <div className={styles.field}>
           <label className={styles.label}>Code</label>
+          <div className={styles.row}>
+            <input
+              className={styles.input}
+              style={{ flex: 1, minWidth: 0 }}
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") pullFromUrl();
+              }}
+              placeholder="https://example.com/app.js"
+            />
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={pullFromUrl}
+              disabled={pulling || !sourceUrl.trim()}
+            >
+              {pulling ? "Pulling…" : "Pull"}
+            </button>
+          </div>
           <CodeEditor value={code} onChange={setCode} />
         </div>
 

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { loadConfig, clearConfig } from "@/lib/firebase";
-import { listApps, createApp, slugify } from "@/lib/appsRepo";
-import { EXAMPLE_APPS } from "@/lib/examples";
+import { listApps, createApp } from "@/lib/appsRepo";
+import { loadExamples, loadExampleDraft } from "@/lib/examples";
 import type { MiniApp } from "@/lib/types";
 import CredentialGate from "@/components/CredentialGate";
 import AppEditor from "@/components/AppEditor";
@@ -43,8 +43,17 @@ export default function Home() {
   }, [refresh]);
 
   async function addExamples() {
-    for (const draft of EXAMPLE_APPS) await createApp(slugify(draft.name), draft);
-    refresh();
+    setError(null);
+    try {
+      const seeds = (await loadExamples()).filter((e) => e.seed);
+      for (const meta of seeds) {
+        const draft = await loadExampleDraft(meta);
+        await createApp(meta.slug, draft);
+      }
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
   }
 
   function resetCreds() {
