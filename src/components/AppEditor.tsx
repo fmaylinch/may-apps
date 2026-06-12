@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
 import { createApp, updateApp, deleteApp, slugify } from "@/lib/appsRepo";
 import { clearAppData } from "@/lib/appData";
-import { loadExamples, fetchExampleCode, type ExampleMeta } from "@/lib/examples";
+import {
+  loadExamples,
+  fetchExampleCode,
+  parseExampleHeader,
+  type ExampleMeta,
+} from "@/lib/examples";
 import type { AppType, MiniApp } from "@/lib/types";
 import styles from "@/app/mayapps.module.css";
 
@@ -114,6 +119,14 @@ export default function AppEditor({
         if (!res.ok) throw new Error(data.error ?? `Failed to fetch (${res.status}).`);
         code = data.code;
       }
+      // Adopt any metadata the source declares in its header comment.
+      const header = parseExampleHeader(code);
+      if (header.name) {
+        setName(header.name);
+        if (!slugEdited) setSlug(slugify(header.name));
+      }
+      if (header.description) setDescription(header.description);
+      if (header.type) setType(header.type);
       setCode(code);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

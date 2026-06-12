@@ -1,3 +1,8 @@
+// @name Arkham Horror Tracker
+// @description Tracks Arkham Horror progress and points.
+// @type react
+// @template
+
 // Globals: React, useState, useEffect, db, ctx, render
 
 // ── The unified model: every element is just "a thing with counters" ──

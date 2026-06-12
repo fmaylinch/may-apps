@@ -1,3 +1,8 @@
+// @name Simple Vanilla ToDo
+// @description A minimal vanilla-JS todo list backed by the scoped db.
+// @type vanilla
+// @template
+
 // Globals: root (HTMLElement), db (scoped), ctx
 
 (async () => {

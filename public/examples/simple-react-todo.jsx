@@ -1,3 +1,8 @@
+// @name Simple React ToDo
+// @description A minimal React todo list backed by the scoped db.
+// @type react
+// @template
+
 // Globals: React, useState, useEffect, db, ctx, render
 
 function App() {

@@ -1,3 +1,8 @@
+// @name Todos (React)
+// @description React + JSX. CRUDs todo items in the scoped db.
+// @type react
+// @seed
+
 // Globals: React, useState, useEffect, db, ctx, render
 // Mount your app by calling render(<App/>).
 
