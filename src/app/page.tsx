@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { loadConfig, clearConfig } from "@/lib/firebase";
-import { listApps, createApp } from "@/lib/appsRepo";
-import { loadExamples, loadExampleDraft } from "@/lib/examples";
+import { listApps } from "@/lib/appsRepo";
 import type { MiniApp } from "@/lib/types";
 import CredentialGate from "@/components/CredentialGate";
 import AppEditor from "@/components/AppEditor";
@@ -41,20 +40,6 @@ export default function Home() {
     if (connected) refresh();
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [refresh]);
-
-  async function addExamples() {
-    setError(null);
-    try {
-      const seeds = (await loadExamples()).filter((e) => e.seed);
-      for (const meta of seeds) {
-        const draft = await loadExampleDraft(meta);
-        await createApp(meta.slug, draft);
-      }
-      refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  }
 
   function resetCreds() {
     if (!confirm("Disconnect this Firebase project? Your stored apps stay in Firestore.")) return;
@@ -95,9 +80,6 @@ export default function Home() {
         <div className={styles.empty}>
           <p>No apps yet.</p>
           <div className={styles.row} style={{ justifyContent: "center", marginTop: 12 }}>
-            <button className={styles.btn} onClick={addExamples}>
-              Add example apps
-            </button>
             <button
               className={`${styles.btn} ${styles.primary}`}
               onClick={() => setEditor({ open: true, app: null })}

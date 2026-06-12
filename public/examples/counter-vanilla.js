@@ -1,7 +1,7 @@
 // @name Counter (vanilla)
 // @description Plain JS + DOM. Persists its count via the scoped db.
 // @type vanilla
-// @seed
+// @template
 
 // Globals: root (HTMLElement), db (scoped), ctx
 // db.list/get/create/update/remove operate on THIS app's data only.

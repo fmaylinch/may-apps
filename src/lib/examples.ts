@@ -1,4 +1,4 @@
-import type { AppDraft, AppType } from "./types";
+import type { AppType } from "./types";
 
 /**
  * Example mini-apps live as real source files under `public/examples/`. Each
@@ -12,7 +12,6 @@ import type { AppDraft, AppType } from "./types";
  *   // @description  One-line summary
  *   // @type         react | vanilla
  *   // @template     Offer as a starting point in the New-app dialog
- *   // @seed         Include when seeding via "Add example apps"
  */
 export interface ExampleMeta {
   slug: string;
@@ -22,7 +21,6 @@ export interface ExampleMeta {
   /** File name within `public/examples/`. */
   file: string;
   template: boolean;
-  seed: boolean;
 }
 
 /** Metadata parsed from an example's header comment. All fields optional. */
@@ -31,7 +29,6 @@ export interface ExampleHeader {
   description?: string;
   type?: AppType;
   template: boolean;
-  seed: boolean;
 }
 
 /**
@@ -40,7 +37,7 @@ export interface ExampleHeader {
  * comment, so tags must sit at the very top of the file.
  */
 export function parseExampleHeader(code: string): ExampleHeader {
-  const header: ExampleHeader = { template: false, seed: false };
+  const header: ExampleHeader = { template: false };
   for (const line of code.split("\n")) {
     const trimmed = line.trim();
     if (trimmed === "") continue; // blank lines don't end the header block
@@ -61,9 +58,6 @@ export function parseExampleHeader(code: string): ExampleHeader {
         break;
       case "template":
         header.template = value !== "false";
-        break;
-      case "seed":
-        header.seed = value !== "false";
         break;
     }
   }
@@ -91,10 +85,4 @@ export async function fetchExampleCode(meta: ExampleMeta): Promise<string> {
   const res = await fetch(exampleCodeUrl(meta));
   if (!res.ok) throw new Error(`Could not load "${meta.name}" (${res.status}).`);
   return res.text();
-}
-
-/** Fetch one example as a ready-to-save draft (metadata + code). */
-export async function loadExampleDraft(meta: ExampleMeta): Promise<AppDraft> {
-  const code = await fetchExampleCode(meta);
-  return { name: meta.name, description: meta.description, type: meta.type, code };
 }
