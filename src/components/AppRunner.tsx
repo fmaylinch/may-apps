@@ -49,7 +49,10 @@ export default function AppRunner({ app, onClose }: { app: MiniApp; onClose: () 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.panelHeader}>
+        <div
+          className={`${styles.panelHeader}${app.color ? ` ${styles.panelHeaderColored}` : ""}`}
+          style={app.color ? { backgroundColor: app.color } : undefined}
+        >
           <h2>{app.name}</h2>
           <button className={styles.btn} onClick={onClose}>
             Close

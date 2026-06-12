@@ -54,6 +54,7 @@ export default function AppEditor({
   const [type, setType] = useState<AppType>(app?.type ?? "react");
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
   const [sourceUrl, setSourceUrl] = useState(app?.sourceUrl ?? "");
+  const [color, setColor] = useState(app?.color ?? "");
   const [pulling, setPulling] = useState(false);
   const [action, setAction] = useState<"save" | "delete" | "clear" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -193,7 +194,7 @@ export default function AppEditor({
     setAction("save");
     setError(null);
     try {
-      const draft = { name: name.trim(), description: description.trim(), type, code, sourceUrl: sourceUrl.trim() };
+      const draft = { name: name.trim(), description: description.trim(), type, code, sourceUrl: sourceUrl.trim(), color };
       if (app) await updateApp(app.id, draft);
       else await createApp(slug, draft);
       onSaved();
@@ -271,6 +272,25 @@ export default function AppEditor({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What it does"
           />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Color</label>
+          <div className={styles.row}>
+            <input
+              type="color"
+              className={styles.colorInput}
+              value={color || "#6366f1"}
+              onChange={(e) => setColor(e.target.value)}
+            />
+            {color ? (
+              <button type="button" className={styles.btn} onClick={() => setColor("")}>
+                Clear color
+              </button>
+            ) : (
+              <span className={styles.muted}>No color</span>
+            )}
+          </div>
         </div>
 
         <div className={styles.field}>

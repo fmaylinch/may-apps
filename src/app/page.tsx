@@ -91,7 +91,11 @@ export default function Home() {
       ) : (
         <div className={styles.list}>
           {apps.map((app) => (
-            <div key={app.id} className={styles.card}>
+            <div
+              key={app.id}
+              className={styles.card}
+              style={app.color ? { backgroundColor: app.color, borderColor: app.color } : undefined}
+            >
               <div className={styles.cardMain}>
                 <div className={styles.cardTitle}>
                   {app.name}
