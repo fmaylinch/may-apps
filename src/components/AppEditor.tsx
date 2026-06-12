@@ -14,6 +14,17 @@ import {
 import type { AppType, MiniApp } from "@/lib/types";
 import styles from "@/app/mayapps.module.css";
 
+// Prompt scaffold for handing a mini-app's code to an LLM. `<CODE>` is replaced
+// with the editor contents when copied; everything else is editable beforehand.
+const AI_PROMPT_TEMPLATE = `I have this code for a mini app.
+
+\`\`\`
+<CODE>
+\`\`\`
+
+Help me change the following and show me the full result.
+I want to...`;
+
 const STARTERS: Record<AppType, string> = {
   vanilla: `// Globals: root (HTMLElement), db (scoped), ctx
 root.textContent = "Hello from a vanilla app!";
@@ -48,6 +59,10 @@ export default function AppEditor({
   const [error, setError] = useState<string | null>(null);
   const [examples, setExamples] = useState<ExampleMeta[]>([]);
   const [showExamples, setShowExamples] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState(AI_PROMPT_TEMPLATE);
+  const [aiCopied, setAiCopied] = useState(false);
   const busy = action !== null;
 
   // Load the example catalog once so it can be offered from the Examples button.
@@ -135,6 +150,34 @@ export default function AppEditor({
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setPulling(false);
+    }
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function clearCode() {
+    if (code.trim() && !confirm("Clear the code editor?")) return;
+    setCode("");
+  }
+
+  async function copyAiPrompt() {
+    try {
+      await navigator.clipboard.writeText(aiPrompt.replace("<CODE>", code));
+      setAiCopied(true);
+      setTimeout(() => {
+        setAiCopied(false);
+        setShowAiPrompt(false);
+      }, 900);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -299,6 +342,18 @@ export default function AppEditor({
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.row}>
+          <button type="button" className={styles.btn} onClick={copyCode}>
+            {copied ? "Copied!" : "Copy code"}
+          </button>
+          <button type="button" className={styles.btn} onClick={() => setShowAiPrompt(true)}>
+            Copy for AI
+          </button>
+          <button type="button" className={styles.btn} onClick={clearCode}>
+            Clear code
+          </button>
+        </div>
+
+        <div className={styles.row}>
           <button className={`${styles.btn} ${styles.primary}`} onClick={save} disabled={busy}>
             {action === "save" ? "Saving…" : "Save"}
           </button>
@@ -318,6 +373,49 @@ export default function AppEditor({
             </>
           )}
         </div>
+
+        {showAiPrompt && (
+          <div
+            className={styles.overlay}
+            style={{ zIndex: 60 }}
+            onClick={() => setShowAiPrompt(false)}
+          >
+            <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.panelHeader}>
+                <h2>Copy for AI</h2>
+                <button className={styles.btn} onClick={() => setShowAiPrompt(false)}>
+                  Cancel
+                </button>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  Prompt — <code>&lt;CODE&gt;</code> is replaced with the editor contents
+                </label>
+                <textarea
+                  className={styles.input}
+                  style={{
+                    minHeight: 220,
+                    resize: "vertical",
+                    fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                  }}
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                />
+              </div>
+              <div className={styles.row}>
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={copyAiPrompt}
+                >
+                  {aiCopied ? "Copied!" : "Copy"}
+                </button>
+                <button className={styles.btn} onClick={() => setAiPrompt(AI_PROMPT_TEMPLATE)}>
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

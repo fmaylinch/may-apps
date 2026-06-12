@@ -49,7 +49,7 @@ function App() {
           <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", padding: "4px 0" }}>
             <input type="checkbox" checked={t.done} onChange={() => toggle(t)} />
             <span style={{ textDecoration: t.done ? "line-through" : "none" }}>{t.text}</span>
-            <button onClick={() => remove(t)} style={{ cursor: "pointer" }}>✕</button>
+            <button onClick={() => remove(t)} style={{ cursor: "pointer", padding: "0 7px" }}>✕</button>
           </li>
         ))}
         {todos.length === 0 && <li style={{ opacity: 0.6 }}>No todos yet.</li>}
