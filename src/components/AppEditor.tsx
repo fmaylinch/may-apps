@@ -89,13 +89,32 @@ export default function AppEditor({
       setError("Enter a URL to pull code from.");
       return;
     }
+    // Resolve relative URLs (e.g. "/examples/foo.jsx") against our own origin so
+    // the same string works in dev, preview, and prod.
+    let resolved: URL;
+    try {
+      resolved = new URL(url, window.location.origin);
+    } catch {
+      setError("Invalid URL.");
+      return;
+    }
     setPulling(true);
     setError(null);
     try {
-      const res = await fetch(`/api/fetch-code?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? `Failed to fetch (${res.status}).`);
-      setCode(data.code);
+      let code: string;
+      if (resolved.origin === window.location.origin) {
+        // Same-origin (e.g. bundled examples): fetch directly, no proxy needed.
+        const res = await fetch(resolved);
+        if (!res.ok) throw new Error(`Failed to fetch (${res.status} ${res.statusText}).`);
+        code = await res.text();
+      } else {
+        // Cross-origin: go through the server proxy to dodge CORS.
+        const res = await fetch(`/api/fetch-code?url=${encodeURIComponent(resolved.href)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? `Failed to fetch (${res.status}).`);
+        code = data.code;
+      }
+      setCode(code);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
