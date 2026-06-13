@@ -22,6 +22,19 @@ apps and run them in the browser, each backed by a database.
   `db` API (`create` / `list` / `get` / `update` / `remove`) that reads and writes only
   under `appData/{appId}/items/*`. Apps are isolated by their unique id, so they can't
   touch each other's data or the `apps` registry.
+- **Apps work offline.** Firestore's persistent (IndexedDB) cache is enabled, so reads
+  resolve from local data and writes are **queued and synced automatically** when the
+  connection returns. The `db` write methods (`create` / `update` / `remove`) resolve
+  immediately rather than waiting for the server, so an app never hangs while offline —
+  `create` returns a real id you can use right away. Apps that want to surface this can
+  call `db.onStatus(cb)` (see below). See `public/examples/offline-notes.jsx` for a demo.
+
+### `db.onStatus(callback) → unsubscribe`
+
+Subscribe to live connectivity / sync state. The callback fires immediately and on every
+change with `{ online: boolean, pending: boolean }`, where `pending` means this app has
+local writes not yet acknowledged by the server. Returns an unsubscribe function — call it
+when the app unmounts. Example (React): `useEffect(() => db.onStatus(setStatus), [])`.
 
 > **Security note:** stored apps run via `new Function(...)` with full page privileges.
 > That trade-off is acceptable here because the "credentials" are a publishable Firebase

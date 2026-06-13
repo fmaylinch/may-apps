@@ -5,7 +5,13 @@ import {
   type FirebaseApp,
   type FirebaseOptions,
 } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from "firebase/firestore";
 
 const STORAGE_KEY = "mayapps:firebaseConfig";
 
@@ -41,6 +47,17 @@ export function getDb(): Firestore {
   const config = loadConfig();
   if (!config) throw new Error("No Firebase config saved. Connect first.");
   const app: FirebaseApp = getApps().length ? getApp() : initializeApp(config);
-  cachedDb = getFirestore(app);
+  // Offline-first: persist reads and queue writes in IndexedDB so mini-apps keep
+  // working without a connection and sync automatically when it returns. Multi-tab
+  // support keeps several open tabs consistent against the one shared cache.
+  try {
+    cachedDb = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch {
+    // Persistence may be unavailable (e.g. private browsing, or Firestore was
+    // already initialized for this app) — fall back to the in-memory default.
+    cachedDb = getFirestore(app);
+  }
   return cachedDb;
 }
