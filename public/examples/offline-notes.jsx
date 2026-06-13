@@ -67,7 +67,7 @@ function App() {
         {notes.map((n) => (
           <li key={n.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
             <span>{n.text}</span>
-            <button onClick={() => remove(n.id)} style={{ marginLeft: 12 }}>✕</button>
+            <button onClick={() => remove(n.id)} style={{ marginLeft: 12, padding: "0 7px" }}>✕</button>
           </li>
         ))}
       </ul>
