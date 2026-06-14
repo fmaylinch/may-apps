@@ -4,38 +4,50 @@
 
 // Globals: React, useState, useEffect, db, ctx, render
 
+// ── Counter colors — reused across types ──
+const COLORS = {
+    actions:   "#eef0f2", // white
+    health:    "#e5484d", // red
+    horror:    "#4a9bf2", // blue
+    clues:     "#5ac46a", // green
+    resources: "#f2c94c", // yellow
+    doom:      "#b072f0", // violet
+    act:       "#7fa386", // greyish green
+    agenda:    "#9b8fb5", // greyish violet
+};
+
 // ── The unified model: every element is just "a thing with counters" ──
 const TYPES = {
     scenario: {
         label: "Scenario",
         counters: [
-            { key: "act",    label: "Act",    color: "#caa24a" },
-            { key: "agenda", label: "Agenda", color: "#b072f0" },
-            { key: "doom",   label: "Doom",   color: "#e5484d" },
+            { key: "act",    label: "Act",    color: COLORS.act },
+            { key: "agenda", label: "Agenda", color: COLORS.agenda },
+            { key: "doom",   label: "Doom",   color: COLORS.doom },
         ],
         hasLocation: false,
     },
     location: {
         label: "Location",
-        counters: [{ key: "clues", label: "Clues", color: "#4aa3ff" }],
+        counters: [{ key: "clues", label: "Clues", color: COLORS.clues }],
         hasLocation: false,
     },
     enemy: {
         label: "Enemy",
         counters: [
-            { key: "health", label: "Health", color: "#5ac46a" },
-            { key: "doom",   label: "Doom",   color: "#e5484d" },
+            { key: "health", label: "Health", color: COLORS.health },
+            { key: "doom",   label: "Doom",   color: COLORS.doom },
         ],
         hasLocation: true,
     },
     player: {
         label: "Investigator",
         counters: [
-            { key: "actions",   label: "Actions",   color: "#caa24a" },
-            { key: "health",    label: "Health",    color: "#5ac46a" },
-            { key: "horror",    label: "Horror",    color: "#b072f0" },
-            { key: "clues",     label: "Clues",     color: "#4aa3ff" },
-            { key: "resources", label: "Resources", color: "#f2c94c" },
+            { key: "actions",   label: "Actions",   color: COLORS.actions },
+            { key: "health",    label: "Health",    color: COLORS.health },
+            { key: "horror",    label: "Horror",    color: COLORS.horror },
+            { key: "clues",     label: "Clues",     color: COLORS.clues },
+            { key: "resources", label: "Resources", color: COLORS.resources },
         ],
         hasLocation: true,
     },
@@ -117,6 +129,66 @@ function AddRow({ type, value, onChange, onAdd }) {
     );
 }
 
+// ── Random generator ──
+// Single pattern: "N: bag" → draw N items from the bag, without replacement.
+// The bag is either:
+//   x..y   → the integers x, x+1, … y     (e.g. "1: 1..6" is a die roll)
+//   abc…   → individual chars/emoji       (whitespace ignored, ❤️ stays intact)
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function bagItems(bag) {
+    const range = bag.match(/^(-?\d+)\s*\.\.\s*(-?\d+)$/);
+    if (range) {
+        let [a, b] = [parseInt(range[1], 10), parseInt(range[2], 10)];
+        if (a > b) [a, b] = [b, a];
+        return Array.from({ length: b - a + 1 }, (_, i) => String(a + i));
+    }
+    // Split into graphemes so multi-codepoint emoji (e.g. ❤️) stay intact; ignore whitespace.
+    return [...new Intl.Segmenter().segment(bag)]
+        .map((s) => s.segment)
+        .filter((s) => s.trim() !== "");
+}
+
+function rollInput(raw) {
+    const m = raw.trim().match(/^(\d+)\s*:\s*(.+)$/);
+    if (!m) return "?";
+    const n = parseInt(m[1], 10);
+    const items = bagItems(m[2]);
+    if (n < 1 || items.length === 0) return "?";
+    // Draw without replacement: each pick is removed from the bag.
+    const picks = [];
+    for (let i = 0; i < n && items.length > 0; i++) {
+        picks.push(items.splice(randInt(0, items.length - 1), 1)[0]);
+    }
+    return picks.join(" ");
+}
+
+function RandomGen({ placeholder, value, onChange, onRemove }) {
+    const [result, setResult] = useState("");
+
+    function roll() {
+        setResult(rollInput(value));
+    }
+
+    return (
+        <div style={cardS}>
+            <div style={{ display: "flex", gap: 8 }}>
+                <input value={value} placeholder={placeholder}
+                       onChange={(e) => onChange(e.target.value)}
+                       onKeyDown={(e) => e.key === "Enter" && roll()} style={inputS} />
+                <button onClick={onRemove} title="Delete"
+                        style={{ ...stepBtn, width: 36, color: C.muted, fontSize: 14 }}>✕</button>
+                <button onClick={roll} style={addBtn}>Roll</button>
+            </div>
+            {result !== "" && (
+                <div style={{ marginTop: 10, fontSize: 26, textAlign: "center", color: C.text, letterSpacing: 2 }}>
+                    {result}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function App() {
     const [els, setEls] = useState([]);
     const [loaded, setLoaded] = useState(false);
@@ -141,6 +213,17 @@ function App() {
             db.update(id, { counters });
             return { ...e, counters };
         }));
+    }
+
+    function setRandomValue(id, value) {
+        setEls((prev) => prev.map((e) => (e.id === id ? { ...e, value } : e)));
+        db.update(id, { value });
+    }
+
+    async function addRandom() {
+        const slot = els.reduce((m, e) => (e.type === "random" ? Math.max(m, e.slot) : m), -1) + 1;
+        await db.create({ type: "random", slot, value: "", placeholder: "e.g. 1: 0..99 or 3: 💀💀⭐️🦑", createdAt: Date.now() });
+        load();
     }
 
     function setLocation(id, locationId) {
@@ -169,6 +252,7 @@ function App() {
     const locations = els.filter((e) => e.type === "location");
     const enemies = els.filter((e) => e.type === "enemy");
     const players = els.filter((e) => e.type === "player");
+    const randoms = els.filter((e) => e.type === "random").sort((a, b) => a.slot - b.slot);
     const doomInPlay = (scenario?.counters?.doom ?? 0) + enemies.reduce((s, e) => s + (e.counters?.doom ?? 0), 0);
 
     const cardsFor = (list) => list.map((el) => (
@@ -187,8 +271,17 @@ function App() {
                                  onDelta={(k, d) => delta(scenario.id, k, d)} onLocation={() => {}} onRemove={null} />
                 )}
                 <div style={{ fontSize: 13, color: C.muted, paddingLeft: 2 }}>
-                    Total doom in play: <strong style={{ color: "#e5484d" }}>{doomInPlay}</strong>
+                    Total doom in play: <strong style={{ color: COLORS.doom }}>{doomInPlay}</strong>
                 </div>
+            </Section>
+
+            <Section title="Random">
+                {randoms.map((r) => (
+                    <RandomGen key={r.id} value={r.value ?? ""} placeholder={r.placeholder}
+                               onChange={(v) => setRandomValue(r.id, v)}
+                               onRemove={() => remove(r.id)} />
+                ))}
+                <button onClick={addRandom} style={addBtn}>Add generator</button>
             </Section>
 
             <Section title="Investigators">
