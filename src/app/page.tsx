@@ -7,6 +7,7 @@ import type { MiniApp } from "@/lib/types";
 import CredentialGate from "@/components/CredentialGate";
 import AppEditor from "@/components/AppEditor";
 import AppRunner from "@/components/AppRunner";
+import AppStage from "@/components/AppStage";
 import styles from "./mayapps.module.css";
 
 type EditorState = { open: false } | { open: true; app: MiniApp | null };
@@ -93,25 +94,30 @@ export default function Home() {
           {apps.map((app) => (
             <div
               key={app.id}
-              className={styles.card}
+              className={`${styles.card} ${app.inline ? styles.cardInline : ""}`}
               style={app.color ? { backgroundColor: app.color, borderColor: app.color } : undefined}
             >
-              <div className={styles.cardMain}>
-                <div className={styles.cardTitle}>
-                  {app.name}
-                  <span className={styles.tag}>{app.type}</span>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardMain}>
+                  <div className={styles.cardTitle}>
+                    {app.name}
+                    <span className={styles.tag}>{app.type}</span>
+                  </div>
+                  {app.description && <div className={styles.cardDesc}>{app.description}</div>}
                 </div>
-                {app.description && <div className={styles.cardDesc}>{app.description}</div>}
+                {!app.inline && (
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={() => setRunning(app)}
+                  >
+                    Run
+                  </button>
+                )}
+                <button className={styles.btn} onClick={() => setEditor({ open: true, app })}>
+                  Edit
+                </button>
               </div>
-              <button
-                className={`${styles.btn} ${styles.primary}`}
-                onClick={() => setRunning(app)}
-              >
-                Run
-              </button>
-              <button className={styles.btn} onClick={() => setEditor({ open: true, app })}>
-                Edit
-              </button>
+              {app.inline && <AppStage app={app} />}
             </div>
           ))}
         </div>

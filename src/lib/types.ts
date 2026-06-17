@@ -10,9 +10,14 @@ export interface MiniApp {
   sourceUrl?: string;
   /** Optional accent color (hex string, e.g. "#6366f1"). */
   color?: string;
+  /** When true, the app runs inline in the list instead of behind a Run button. */
+  inline?: boolean;
   createdAt: number;
   updatedAt: number;
 }
 
 /** Fields the user edits; id and timestamps are managed by the repo. */
-export type AppDraft = Pick<MiniApp, "name" | "description" | "type" | "code" | "sourceUrl" | "color">;
+export type AppDraft = Pick<
+  MiniApp,
+  "name" | "description" | "type" | "code" | "sourceUrl" | "color" | "inline"
+>;
