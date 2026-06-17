@@ -90,10 +90,13 @@
   gap: 12px;
 }
 
-/* Inline apps stack their header above the mounted stage. */
+/* Inline apps stack their header above the mounted stage, with a tighter
+   header so the running app sits closer to the title. */
 .cardInline {
   flex-direction: column;
   align-items: stretch;
+  padding-top: 8px;
+  gap: 8px;
 }
 
 .cardHeader {

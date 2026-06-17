@@ -83,7 +83,9 @@ export default function Home() {
                   {app.name}
                   <span className={styles.tag}>{app.type}</span>
                 </div>
-                {app.description && <div className={styles.cardDesc}>{app.description}</div>}
+                {app.description && !app.inline && (
+                  <div className={styles.cardDesc}>{app.description}</div>
+                )}
               </>
             );
             return (
