@@ -22,13 +22,37 @@ function daysBetween(key) {
     return Math.round((today - then) / 86400000);
 }
 
+// A history entry is "YYYY-MM-DD" or "YYYY-MM-DD C" (C = a custom mark char)
+function entryDay(entry) {
+    return entry.slice(0, 10);
+}
+function entryMark(entry) {
+    const c = entry.slice(10).trim();
+    return c ? c[0] : "x";
+}
+
 function lastDoneLabel(history) {
     if (!history || history.length === 0) return "-";
     const last = history.slice().sort().at(-1); // most recent day
-    const diff = daysBetween(last);
+    const diff = daysBetween(entryDay(last));
     if (diff === 0) return "today";
     if (diff === 1) return "1 day ago";
     return diff + " days ago";
+}
+
+// "-x---F-" for the last `days` days (oldest first); "-" = missed,
+// otherwise the day's mark char ("x" by default, or a custom one)
+function recentStrip(history, days = 7) {
+    const marks = {};
+    for (const e of history || []) marks[entryDay(e)] = entryMark(e);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let out = "";
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today); d.setDate(today.getDate() - i);
+        const key = dayKey(d);
+        out += key in marks ? marks[key] : "-";
+    }
+    return out;
 }
 
 function App() {
@@ -54,9 +78,9 @@ function App() {
     async function toggleToday(h) {
         const today = dayKey();
         const history = h.history || [];
-        const next = history.includes(today)
-            ? history.filter((d) => d !== today)   // un-check today
-            : [...history, today];                 // mark done today
+        const next = history.some((e) => entryDay(e) === today)
+            ? history.filter((e) => entryDay(e) !== today)   // un-check today
+            : [...history, today];                           // mark done today
         await db.update(h.id, { history: next });
         refresh();
     }
@@ -105,7 +129,7 @@ function App() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {habits.map((h) => {
                     const history = h.history || [];
-                    const doneToday = history.includes(today);
+                    const doneToday = history.some((e) => entryDay(e) === today);
                     const isOpen = !!open[h.id];
                     return (
                         <li key={h.id} style={{ padding: "8px 0", borderBottom: "1px solid #eee" }}>
@@ -127,7 +151,12 @@ function App() {
                                 >
                   {h.name}
                 </span>
-                                <span style={{ fontSize: 13, opacity: 0.6 }}>{lastDoneLabel(history)}</span>
+                                <span
+                                    title={lastDoneLabel(history)}
+                                    style={{ fontFamily: "monospace", fontSize: 13, opacity: 0.6, letterSpacing: 1 }}
+                                >
+                                    {recentStrip(history)}
+                                </span>
                                 <button
                                     onClick={() => toggleHistory(h)}
                                     style={{ cursor: "pointer", padding: "0 7px" }}
@@ -138,12 +167,10 @@ function App() {
 
                             {isOpen && (
                                 <div style={{ margin: "6px 0 2px 26px", fontSize: 13 }}>
-                                    <div style={{ opacity: 0.6, marginBottom: 4 }}>
-                                        One day per line (YYYY-MM-DD)
-                                    </div>
                                     <textarea
                                         value={draft[h.id] ?? ""}
                                         onChange={(e) => setDraft((d) => ({ ...d, [h.id]: e.target.value }))}
+                                        placeholder={"One day per line with optional mark e.g. 2026-06-17 F"}
                                         rows={Math.max(3, (draft[h.id] ?? "").split("\n").length)}
                                         style={{ width: "100%", boxSizing: "border-box", fontFamily: "monospace", fontSize: 13, padding: 6 }}
                                     />
