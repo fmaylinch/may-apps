@@ -22,10 +22,21 @@ function daysBetween(key) {
     return Math.round((today - then) / 86400000);
 }
 
+// A history entry is "YYYY-MM-DD" (shown as "x") or "YYYY-MM-DD <char>"
+// where <char> is a custom marker shown instead of "x" for that day.
+function parseEntry(entry) {
+    const [day, ...rest] = String(entry).trim().split(/\s+/);
+    return { day, mark: rest.join(" ") || "x" };
+}
+
+function entryDay(entry) {
+    return parseEntry(entry).day;
+}
+
 function lastDoneLabel(history) {
     if (!history || history.length === 0) return "-";
     const last = history.slice().sort().at(-1); // most recent day
-    const diff = daysBetween(last);
+    const diff = daysBetween(entryDay(last));
     if (diff === 0) return "today";
     if (diff === 1) return "1 day ago";
     return diff + " days ago";
@@ -54,9 +65,10 @@ function App() {
     async function toggleToday(h) {
         const today = dayKey();
         const history = h.history || [];
-        const next = history.includes(today)
-            ? history.filter((d) => d !== today)   // un-check today
-            : [...history, today];                 // mark done today
+        const done = history.some((e) => entryDay(e) === today);
+        const next = done
+            ? history.filter((e) => entryDay(e) !== today)  // un-check today
+            : [...history, today];                          // mark done today ("x")
         await db.update(h.id, { history: next });
         refresh();
     }
@@ -70,9 +82,13 @@ function App() {
     async function toggleHistory(h) {
         if (open[h.id]) {
             const text = draft[h.id] ?? "";
-            const days = [...new Set(
-                text.split("\n").map((s) => s.trim()).filter(Boolean)
-            )].sort();
+            // De-dupe by day (last line for a day wins), keep any marker char.
+            const byDay = new Map();
+            for (const line of text.split("\n")) {
+                const s = line.trim();
+                if (s) byDay.set(entryDay(s), s);
+            }
+            const days = [...byDay.values()].sort();
             await db.update(h.id, { history: days });
             setOpen((o) => ({ ...o, [h.id]: false }));
             refresh();
@@ -105,8 +121,9 @@ function App() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {habits.map((h) => {
                     const history = h.history || [];
-                    const doneToday = history.includes(today);
+                    const doneToday = history.some((e) => entryDay(e) === today);
                     const isOpen = !!open[h.id];
+                    const marks = history.slice().sort().reverse();
                     return (
                         <li key={h.id} style={{ padding: "8px 0", borderBottom: "1px solid #eee" }}>
                             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -136,10 +153,34 @@ function App() {
                                 </button>
                             </div>
 
+                            {marks.length > 0 && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, margin: "6px 0 0 26px" }}>
+                                    {marks.map((e) => {
+                                        const { day, mark } = parseEntry(e);
+                                        return (
+                                            <span
+                                                key={day}
+                                                title={day}
+                                                style={{
+                                                    minWidth: 18, height: 18, padding: "0 3px",
+                                                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                                    fontSize: 12, fontFamily: "monospace",
+                                                    border: "1px solid #ddd", borderRadius: 3,
+                                                    color: h.color || "gray",
+                                                }}
+                                            >
+                                                {mark}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             {isOpen && (
                                 <div style={{ margin: "6px 0 2px 26px", fontSize: 13 }}>
                                     <div style={{ opacity: 0.6, marginBottom: 4 }}>
-                                        One day per line (YYYY-MM-DD)
+                                        One day per line (YYYY-MM-DD), optionally a marker char
+                                        after the date (e.g. "2026-06-16 G"); blank shows as "x".
                                     </div>
                                     <textarea
                                         value={draft[h.id] ?? ""}
