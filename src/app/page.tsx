@@ -53,21 +53,6 @@ export default function Home() {
 
   return (
     <div className={styles.shell}>
-      <div className={styles.header}>
-        <h1>MayApps</h1>
-        <div className={styles.row}>
-          <button className={styles.btn} onClick={resetCreds}>
-            Disconnect
-          </button>
-          <button
-            className={`${styles.btn} ${styles.primary}`}
-            onClick={() => setEditor({ open: true, app: null })}
-          >
-            + New app
-          </button>
-        </div>
-      </div>
-
       {error && (
         <div className={styles.error}>
           {error}
@@ -91,37 +76,61 @@ export default function Home() {
         </div>
       ) : (
         <div className={styles.list}>
-          {apps.map((app) => (
-            <div
-              key={app.id}
-              className={`${styles.card} ${app.inline ? styles.cardInline : ""}`}
-              style={app.color ? { backgroundColor: app.color, borderColor: app.color } : undefined}
-            >
-              <div className={styles.cardHeader}>
-                <div className={styles.cardMain}>
-                  <div className={styles.cardTitle}>
-                    {app.name}
-                    <span className={styles.tag}>{app.type}</span>
-                  </div>
-                  {app.description && <div className={styles.cardDesc}>{app.description}</div>}
+          {apps.map((app) => {
+            const info = (
+              <>
+                <div className={styles.cardTitle}>
+                  {app.name}
+                  <span className={styles.tag}>{app.type}</span>
                 </div>
-                {!app.inline && (
-                  <button
-                    className={`${styles.btn} ${styles.primary}`}
-                    onClick={() => setRunning(app)}
-                  >
-                    Run
-                  </button>
+                {app.description && !app.inline && (
+                  <div className={styles.cardDesc}>{app.description}</div>
                 )}
-                <button className={styles.btn} onClick={() => setEditor({ open: true, app })}>
-                  Edit
-                </button>
+              </>
+            );
+            return (
+              <div
+                key={app.id}
+                className={`${styles.card} ${app.inline ? styles.cardInline : ""}`}
+                style={app.color ? { backgroundColor: app.color, borderColor: app.color } : undefined}
+              >
+                <div className={styles.cardHeader}>
+                  {app.inline ? (
+                    <div className={styles.cardMain}>{info}</div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.cardMain} ${styles.cardRun}`}
+                      onClick={() => setRunning(app)}
+                    >
+                      {info}
+                    </button>
+                  )}
+                  <button className={styles.btn} onClick={() => setEditor({ open: true, app })}>
+                    Edit
+                  </button>
+                </div>
+                {app.inline && <AppStage app={app} />}
               </div>
-              {app.inline && <AppStage app={app} />}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      <div className={styles.header}>
+        <h1>MayApps</h1>
+        <div className={styles.row}>
+          <button className={styles.btn} onClick={resetCreds}>
+            Disconnect
+          </button>
+          <button
+            className={`${styles.btn} ${styles.primary}`}
+            onClick={() => setEditor({ open: true, app: null })}
+          >
+            + New app
+          </button>
+        </div>
+      </div>
 
       {editor.open && (
         <AppEditor

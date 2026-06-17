@@ -90,10 +90,13 @@
   gap: 12px;
 }
 
-/* Inline apps stack their header above the mounted stage. */
+/* Inline apps stack their header above the mounted stage, with a tighter
+   header so the running app sits closer to the title. */
 .cardInline {
   flex-direction: column;
   align-items: stretch;
+  padding-top: 8px;
+  gap: 8px;
 }
 
 .cardHeader {
@@ -106,6 +109,25 @@
 .cardMain {
   flex: 1;
   min-width: 0;
+}
+
+/* The main cell doubles as the Run trigger. It's constrained to its own flex
+   area (with a gap before Edit) so clicking it never hits the Edit button. */
+.cardRun {
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 6px;
+  margin: -6px;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+
+.cardRun:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .cardTitle {
