@@ -55,6 +55,7 @@ export default function AppEditor({
   const [code, setCode] = useState(app?.code ?? STARTERS[app?.type ?? "react"]);
   const [sourceUrl, setSourceUrl] = useState(app?.sourceUrl ?? "");
   const [color, setColor] = useState(app?.color ?? "");
+  const [inline, setInline] = useState(app?.inline ?? false);
   const [pulling, setPulling] = useState(false);
   const [action, setAction] = useState<"save" | "delete" | "clear" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +195,7 @@ export default function AppEditor({
     setAction("save");
     setError(null);
     try {
-      const draft = { name: name.trim(), description: description.trim(), type, code, sourceUrl: sourceUrl.trim(), color };
+      const draft = { name: name.trim(), description: description.trim(), type, code, sourceUrl: sourceUrl.trim(), color, inline };
       if (app) await updateApp(app.id, draft);
       else await createApp(slug, draft);
       onSaved();
@@ -303,6 +304,17 @@ export default function AppEditor({
             <option value="react">React (JSX)</option>
             <option value="vanilla">Vanilla JS</option>
           </select>
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={inline}
+              onChange={(e) => setInline(e.target.checked)}
+            />
+            Display inline in the list (no Run button)
+          </label>
         </div>
 
         <div className={styles.field}>
