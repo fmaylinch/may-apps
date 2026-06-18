@@ -1,19 +1,28 @@
 import type { NextRequest } from "next/server";
 
-// Proxy that pulls source code from an arbitrary URL on the server side, so the
-// editor can import code from hosts that don't send permissive CORS headers.
+// Proxy that pulls source code from a well-known host on the server side, so the
+// editor can import code from sites that don't send permissive CORS headers.
 
-// Block obvious internal / loopback targets to limit SSRF surface.
-function isBlockedHost(hostname: string): boolean {
+// Allow only a handful of well-known code-hosting sites. An allowlist keeps this
+// simple and sidesteps SSRF entirely: internal / loopback / metadata hosts can
+// never match, so there's no blocklist to keep in sync with.
+const ALLOWED_HOSTS = [
+  "github.com",
+  "raw.githubusercontent.com",
+  "gist.github.com",
+  "gist.githubusercontent.com",
+  "gitlab.com",
+  "bitbucket.org",
+  "codeberg.org",
+  "cdn.jsdelivr.net",
+  "unpkg.com",
+  "esm.sh",
+];
+
+// True when the hostname is an allowed host or a subdomain of one.
+function isAllowedHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  if (h === "localhost" || h.endsWith(".localhost") || h === "0.0.0.0") return true;
-  if (h === "::1" || h === "[::1]") return true;
-  if (/^127\./.test(h)) return true;
-  if (/^10\./.test(h)) return true;
-  if (/^192\.168\./.test(h)) return true;
-  if (/^169\.254\./.test(h)) return true; // link-local (incl. cloud metadata)
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
-  return false;
+  return ALLOWED_HOSTS.some((allowed) => h === allowed || h.endsWith(`.${allowed}`));
 }
 
 export async function GET(request: NextRequest) {
@@ -32,8 +41,13 @@ export async function GET(request: NextRequest) {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     return Response.json({ error: "Only http and https URLs are allowed." }, { status: 400 });
   }
-  if (isBlockedHost(url.hostname)) {
-    return Response.json({ error: "That host is not allowed." }, { status: 403 });
+  if (!isAllowedHost(url.hostname)) {
+    return Response.json(
+      {
+        error: `Host "${url.hostname}" is not allowed. Allowed hosts: ${ALLOWED_HOSTS.join(", ")}.`,
+      },
+      { status: 403 },
+    );
   }
 
   try {
